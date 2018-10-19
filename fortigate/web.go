@@ -193,8 +193,7 @@ func (c *WebClient) do(method string, path string, p *url.Values, payload interf
 
 // Special cases
 func (v *VIP) UnmarshalJSON(data []byte) error {
-	switch apiVersion {
-	case "v5.4.6":
+	if strings.HasPrefix(apiVersion, "v5.4.") {
 		type VIPAlias VIP
 		temp := struct {
 			Monitor string `json:"monitor"`
@@ -211,7 +210,7 @@ func (v *VIP) UnmarshalJSON(data []byte) error {
 		}
 		return nil
 
-	default:
+	} else {
 		type VIPAlias VIP
 		temp := struct {
 			*VIPAlias
@@ -226,17 +225,14 @@ func (v *VIP) UnmarshalJSON(data []byte) error {
 }
 
 func (v *VIP) MarshalJSON() ([]byte, error) {
-	switch apiVersion {
-
-	case "v5.6.3", "v5.6.4":
+	if strings.HasPrefix(apiVersion, "v5.6.") {
 		type VIPAlias VIP
 		return json.Marshal(&struct {
 			*VIPAlias
 		}{
 			VIPAlias: (*VIPAlias)(v),
 		})
-
-	case "v5.4.6":
+	} else if strings.HasPrefix(apiVersion, "v5.4.") {
 		type VIPAlias VIP
 		var ms []string
 		for _, m := range v.Monitor {
@@ -250,7 +246,7 @@ func (v *VIP) MarshalJSON() ([]byte, error) {
 			Monitor:  strings.Join(ms, " "),
 		})
 
-	default:
+	} else {
 		return []byte{}, fmt.Errorf("unknown or undefined api version %s", apiVersion)
 	}
 }
